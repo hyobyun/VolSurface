@@ -1,0 +1,22 @@
+{
+  "name": "volsurface",
+  "version": "1.0.0",
+  "description": "Volatility Surface Visualization",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hyobyun/VolSurface.git"
+  },
+  "author": "Hyo Yul Byun",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hyobyun/VolSurface/issues"
+  },
+  "homepage": "https://github.com/hyobyun/VolSurface#readme",
+  "dependencies": {
+    "three": "^0.100.0"
+  }
+}
