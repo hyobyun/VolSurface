@@ -3,7 +3,9 @@ var geometry, material, mesh;
 
 var surfaceState={
   'ui': {
-    "addFile" :function(){ console.log("clicked") },
+    "addFile" :function(){
+      document.getElementById('csvInput').click();
+    },
     "calls" :true,
     "puts"  : true
   }
@@ -12,6 +14,27 @@ var surfaceState={
 init();
 animate();
 createUI();
+
+// handle files imported from Ui
+function fileImport(files) {
+  console.log(files);
+  if (window.FileReader) {
+    var reader = new FileReader();
+    reader.readAsText(files[0]);
+    reader.onload = function(event) {
+      var csv = event.target.result;
+      console.log(csv);
+    };
+    reader.onerror = function errorHandler(evt) {
+      alert("File Load Error");
+      console.error(evt);
+    }
+   } else {
+       alert('FileReader not supported in this browser.');
+   }
+
+}
+
 
 function init() {
 
