@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/hyobyun/VolSurface#readme",
   "dependencies": {
+    "dat.gui": "^0.7.5",
     "three": "^0.100.0"
   }
 }
