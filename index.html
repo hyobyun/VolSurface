@@ -2,10 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>title</title>
+    <title>Volatility Surface</title>
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="./node_modules/three/build/three.min.js"></script>
-    <script type="text/javascript" src="./node_modules/three/examples/js/controls/OrbitControls.js"></script>
+    <script type="text/javascript" src="./node_modules/three/examples/js/controls/TrackballControls.js"></script>
     <script type="text/javascript" src="./node_modules/dat.gui/build/dat.gui.min.js"></script>
     <script type="text/javascript" src="./node_modules/papaparse/papaparse.min.js"></script>
 
@@ -13,9 +13,9 @@
     <script src="./node_modules/tinygradient/browser.js"></script>
   </head>
   <body>
-    <input id="csvInput" type="file" style="visibility:hidden" multiple="false" onchange="fileImport(this.files)"/>
-    <!-- page content -->
+    <div id="info">Description</div>
+    <script src="./volsurface.js"></script>
   </body>
 
-  <script src="./volsurface.js"></script>
+    <input id="csvInput" type="file" style="visibility:hidden" multiple="false" onchange="fileImport(this.files)"/>
 </html>

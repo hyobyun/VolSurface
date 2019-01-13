@@ -19,6 +19,7 @@
   "dependencies": {
     "dat.gui": "^0.7.5",
     "papaparse": "^4.6.3",
+    "rbf": "^1.1.5",
     "three": "^0.100.0",
     "tinygradient": "^1.0.0"
   }

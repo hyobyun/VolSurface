@@ -1,0 +1,33 @@
+#csvInput {
+  height:0px;
+  width:0px;
+  	position: absolute;
+}
+
+body {
+  margin:0px;
+}
+
+#info {
+	position: absolute;
+	top: 10px;
+  font-size:.75em;
+	width: 100%;
+	text-align: left;
+	z-index: 1;
+	display:block;
+  margin:0;
+  padding:10px;
+  color: #FFFFFF;
+  font-family: Consolas,monaco,monospace;
+
+}
+#info h1 {
+
+  font-size:1.2em;
+  margin:0px;
+}
+body .dg.ac {
+
+	z-index: 100;
+}
