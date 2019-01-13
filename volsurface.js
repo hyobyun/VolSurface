@@ -4,20 +4,25 @@ var geometry, material, mesh;
 var surfaceState={
   'ui': {
     "addFile" :function(){
-      document.getElementById('csvInput').click();
-    },
-    "calls" :true,
-    "puts"  : true
+                document.getElementById('csvInput').click();
+              },
+    'calls' : true,
+    'puts'  : true
   },
   // t+:srike:price
   "rawData" :{},
   "allStrikes" : {},
-
   "daysIndex" :[],
   "strikesIndex" :[],
   "procData" : []
 };
+var headeri = {
+ "Expiration Date": 0,
+  "Strike": 11,
+  "Call IV" : 7,
+  "Put IV" : 8
 
+}
 init();
 animate();
 createUI();
@@ -31,9 +36,11 @@ function dateDiffInDays(a) {
 }
 
 function processRawItem(item) {
-  var days= parseInt(dateDiffInDays( new Date(item["data"][0]["Expiration Date"])));
-  var strike=Number(item["data"][0]["Strike"]);
-  var iv= item["data"][0]["IV"];
+  //console.log(item);
+  var days= parseInt(dateDiffInDays( new Date(item["data"][0][headeri["Expiration Date"]])));
+  var strike=Number(item["data"][0][headeri["Strike"]]);   //
+  var calliv= item["data"][0][headeri["Call IV"]];
+  var putiv= item["data"][0][headeri["Put IV"]];
 
   if(! (days in surfaceState["rawData"]) ) {
     surfaceState["rawData"][days]={};
@@ -44,7 +51,7 @@ function processRawItem(item) {
   if(! (strike in surfaceState["allStrikes"]) ) {
     surfaceState["allStrikes"][strike]=1;
   }
-  surfaceState["rawData"][days][strike]=iv*100;
+  surfaceState["rawData"][days][strike]=[calliv,putiv];
 }
 
 
@@ -57,48 +64,50 @@ function processRawDataComplete() {
       surfaceState["procData"][i][j]=surfaceState["rawData"][surfaceState["daysIndex"][i]][surfaceState["strikesIndex"][j]];
           }
   }
-  draw();
-  console.log(  surfaceState["procData"]);
+  drawCallsPuts();
 }
-function draw() {
+function drawCallsPuts() {
+  if(surfaceState.ui["calls"]) {
+    draw(0)
+  }
+    console.log("PUTS: " +surfaceState.ui["puts"])
+  if( surfaceState.ui["puts"]) {
+    draw(1)
+  }
+}
+function draw(callsputs01) {
 
-  var starsGeometry = new THREE.Geometry();
-
+  var points=[];
   for (var i = 0; i <   surfaceState["daysIndex"].length; i++) {
     for (var j = 0; j <   surfaceState["strikesIndex"].length; j++) {
-
-          if(!isNaN(surfaceState["procData"][i][j]))
+          if(surfaceState["procData"][i][j] && !isNaN(surfaceState["procData"][i][j][callsputs01]     ))
           {
-          	var star = new THREE.Vector3();
-          	star.x = surfaceState["daysIndex"][i] ;
-          	star.y = surfaceState["strikesIndex"][j] ;
-          	star.z =  surfaceState["procData"][i][j] ;
+          	var point = new THREE.Vector3();
+            vol=surfaceState["procData"][i][j][callsputs01]*100;
+          	point.x = surfaceState["daysIndex"][i] ;
+          	point.y = surfaceState["strikesIndex"][j] ;
+          	point.z =  surfaceState["procData"][i][j][callsputs01] ;
+          	points.push( point );
 
-          	starsGeometry.vertices.push( star );
 
 
-
-              var gradient = tinygradient([
-               '#ff0000',
-                  '#00ff00',
-              '#0000ff'
-              ]);
-              var color= gradient.hsvAt( Math.min(surfaceState["procData"][i][j]/100,1)).toHexString()
-              console.log(color)
-            var geometry = new THREE.SphereGeometry( 1, 4, 4 );
+          var gradient = tinygradient([
+           '#ff0000',
+              '#00ff00',
+          '#0000ff'
+          ]);
+          var color= gradient.reverse().hsvAt( Math.min(vol/100,1)).toHexString()
+            //  console.log(color)
+            var geometry = new THREE.SphereGeometry( 10, 4, 4 );
             var material = new THREE.MeshBasicMaterial( {color: color} );
             var sphere = new THREE.Mesh( geometry, material );
-            sphere.position.set(surfaceState["daysIndex"][i] , surfaceState["strikesIndex"][j] , surfaceState["procData"][i][j] );
+            console.log(callsputs01 + "  " +(callsputs01===0 ? 1:-1));
+            sphere.position.set(surfaceState["daysIndex"][i] , surfaceState["strikesIndex"][j] ,  vol *(callsputs01==0 ? 1:-1));
             scene.add( sphere );
         }
     }
   }
 
-  var starsMaterial = new THREE.PointsMaterial( { color: 0xFFFFFF } );
-
-  var starField = new THREE.Points( starsGeometry, starsMaterial );
-
-  scene.add( starField );
 }
 // handle files imported from Ui
 function fileImport(files) {
@@ -116,8 +125,7 @@ function fileImport(files) {
       	newline: "",	// auto-detect
       	quoteChar: '',
       	escapeChar: '',
-      	header: true,
-      	transformHeader: undefined,
+      	header: false,
       	dynamicTyping: false,
       	preview: 0,
       	encoding: "",
@@ -144,7 +152,7 @@ function init() {
 	camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight,  .1, 10000 );
 
     camera.lookAt(7,10,20);
-    camera.position.z = 100;
+    camera.position.z = 1000;
     camera.position.x = 5;
     camera.position.y = 5;
 
@@ -191,8 +199,7 @@ function animate() {
 function createUI() {
   var gui = new dat.GUI();
 
-  gui.add(surfaceState.ui, 'addFile').name('AddFile');
-
+  gui.add(surfaceState.ui, 'addFile').name('Add File');
   gui.add(surfaceState.ui, 'calls');
   gui.add(surfaceState.ui, 'puts');
 }
