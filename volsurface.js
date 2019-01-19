@@ -75,27 +75,45 @@ function processRawDataComplete() {
     drawCallsPuts();
 }
 
+// shitty empty fill w/ neighbor - my version of "middle out"
 function interpolate() {
-    // This interpolation method sucks
     for (var i = 0; i < surfaceState["daysIndex"].length; i++) {
-        var lastGoodVolCall = 0;
-        var lastGoodVolPut = 0;
-        for (var j = 0; j < surfaceState["strikesIndex"].length; j++) {
-            if (!surfaceState["procData"][i][j]) {
-                surfaceState["procData"][i][j] = [];
+        let errStepDiff= .5;
+
+        //0 :call, 1:put
+        var lastGoodVol_lower = [];
+        var lastGoodVol_higher = [];
+
+        for (var j = 0; j < Math.ceil(surfaceState["strikesIndex"].length/2)+1 ; j++) {
+            let j_lower =  Math.ceil(surfaceState["strikesIndex"].length/2)+2 -j;
+            let j_higher =  Math.ceil(surfaceState["strikesIndex"].length/2)-2+ j;
+
+
+            if (!surfaceState["procData"][i][j_lower]) {
+                surfaceState["procData"][i][j_lower] = [];
+            }
+            if (!surfaceState["procData"][i][j_higher]) {
+                surfaceState["procData"][i][j_higher] = [];
             }
 
-            if (!isNaN(surfaceState["procData"][i][j][0])) {
-                lastGoodVolCall = surfaceState["procData"][i][j][0];
-            } else {
-                surfaceState["procData"][i][j][0] = lastGoodVolCall;
+            for( var callput=0;callput<=1;callput++) {
+
+                if (!isNaN(surfaceState["procData"][i][j_lower][callput])) {
+                    lastGoodVol_lower[callput] = surfaceState["procData"][i][j_lower][callput];
+                } else {
+                    surfaceState["procData"][i][j_lower][callput] = lastGoodVol_lower[callput];
+                }
+
+                if (!isNaN(surfaceState["procData"][i][j_higher][callput])) {
+                    lastGoodVol_higher[callput] = surfaceState["procData"][i][j_higher][callput];
+                } else {
+                    surfaceState["procData"][i][j_higher][callput] = lastGoodVol_higher[callput];
+                }
+
             }
 
-            if (!isNaN(surfaceState["procData"][i][j][1])) {
-                lastGoodVolPut = surfaceState["procData"][i][j][1];
-            } else {
-                surfaceState["procData"][i][j][1] = lastGoodVolPut;
-            }
+
+
         }
     }
 }
@@ -120,9 +138,8 @@ function getTriangles(size, i, j) {
 }
 
 function draw(callsputs01) {
-    var surfaceGeo = new THREE.Geometry();
-    var surfaceGeoVertexVolLookup = [];
-
+    let surfaceGeo = new THREE.Geometry();
+    let surfaceGeoVertexVolLookup = [];
 
     var points = [];
     for (var i = 0; i < surfaceState["daysIndex"].length; i++) {
@@ -141,8 +158,9 @@ function draw(callsputs01) {
             var color = gradient.reverse().hsvAt(Math.min(vol / 100, 1)).toHexString()
 
 
+            var dateoffset=100;
             surfaceGeo.vertices.push(
-                new THREE.Vector3(surfaceState["daysIndex"][i], surfaceState["strikesIndex"][j], 100 * (callsputs01 == 0 ? 1 : -1) + vol * (callsputs01 == 0 ? 1 : -1) * 2)
+                new THREE.Vector3( surfaceState["daysIndex"][i]* (callsputs01 == 0 ? 1 : -1), surfaceState["strikesIndex"][j] , vol * 1)
             );
             surfaceGeoVertexVolLookup.push(vol);
             if (i < surfaceState["daysIndex"].length - 1 && j < surfaceState["strikesIndex"].length - 1) {
@@ -156,13 +174,6 @@ function draw(callsputs01) {
 
 
             //  console.log(color)
-            var geometry = new THREE.SphereGeometry(10, 2, 2);
-            var material = new THREE.MeshBasicMaterial({
-                color: color
-            });
-            var sphere = new THREE.Mesh(geometry, material);
-            sphere.position.set(surfaceState["daysIndex"][i], surfaceState["strikesIndex"][j], 10 * (callsputs01 == 0 ? 1 : -1) + vol * (callsputs01 == 0 ? 1 : -1));
-            //scene.add( sphere );
         }
     }
 
@@ -183,6 +194,7 @@ function draw(callsputs01) {
     geoMat.vertexColors = THREE.FaceColors;
     var surface = new THREE.Mesh(surfaceGeo, geoMat);
 
+    surface.translateX(100* (callsputs01 == 0 ? 1 : -1))
     scene.add(surface);
 
 
@@ -256,8 +268,13 @@ function init() {
 
 
     scene = new THREE.Scene();
-    var light = new THREE.AmbientLight(0xEEEEEE); // soft white light
+    var light = new THREE.AmbientLight(0xDDDDDD); // soft white light
     scene.add(light);
+
+    var directionalLight = new THREE.DirectionalLight( 0xCCCCCCC,0.5);
+    scene.add( directionalLight );
+
+
     geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
     material = new THREE.MeshNormalMaterial();
 
