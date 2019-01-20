@@ -486,7 +486,7 @@ function clickTrace( event ) {
 
 }
 
-document.addEventListener('mousemove', clickTrace, false);
+document.addEventListener('mousedown', clickTrace, false);
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
