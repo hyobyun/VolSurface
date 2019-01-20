@@ -150,6 +150,7 @@ function draw(callsputs01) {
         dayLogOffset=dayLogOffset+surfaceState["daysIndex"][0]*-1;
       }
   let xOffset=100;
+  let yscale=2;
     let surfaceGeo = new THREE.Geometry();
     let surfaceGeoVertexVolLookup = [];
 
@@ -171,7 +172,7 @@ function draw(callsputs01) {
 
             var dateoffset=100;
             surfaceGeo.vertices.push(
-                new THREE.Vector3( Math.log((dayLogOffset+Number(surfaceState["daysIndex"][i])))*100 * (callsputs01 == 0 ? 1 : -1), surfaceState["strikesIndex"][j] , vol * 1)
+                new THREE.Vector3( Math.log((dayLogOffset+Number(surfaceState["daysIndex"][i])))*100 * (callsputs01 == 0 ? 1 : -1), surfaceState["strikesIndex"][j]*yscale , vol * 1)
             );
             surfaceGeoVertexVolLookup.push(vol);
             if (i < surfaceState["daysIndex"].length - 1 && j < surfaceState["strikesIndex"].length - 1) {
@@ -212,14 +213,6 @@ function draw(callsputs01) {
 
     // GRIDS
 
-    // time grid
-    var size = surfaceState["daysIndex"][surfaceState["daysIndex"].length-1]* (callsputs01 == 0 ? 1 : -1)*10;
-    var divisions = 100;
-
-    var gridHelper = new THREE.GridHelper( size, divisions );
-    gridHelper.rotateX(THREE.Math.degToRad(90))
-    scene.add( gridHelper );
-
 
 
     // Time gridHelper
@@ -227,8 +220,8 @@ function draw(callsputs01) {
       let x =  Math.log((dayLogOffset+Number(surfaceState["daysIndex"][i])))*100 * (callsputs01 == 0 ? 1 : -1);
       var geometry = new THREE.Geometry();
       console.log(surfaceState["daysIndex"][i] + " --- " +dayLogOffset)
-      geometry.vertices.push(new THREE.Vector3( x,-5,0));
-      geometry.vertices.push(new THREE.Vector3( x, (5+ Number(surfaceState["strikesIndex"][surfaceState["strikesIndex"].length-1])),0   ));
+      geometry.vertices.push(new THREE.Vector3( x,-5,-1));
+      geometry.vertices.push(new THREE.Vector3( x, (5+ yscale*Number(surfaceState["strikesIndex"][surfaceState["strikesIndex"].length-1])),-1));
 
       var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({}));
       line.translateX(xOffset* (callsputs01 == 0 ? 1 : -1))
@@ -242,6 +235,33 @@ function draw(callsputs01) {
       scene.add( text );
     }
 
+
+    // Strike gridHelper
+    let lastY=0;
+    for (var i = 0; i < surfaceState["strikesIndex"].length; i++) {
+      let xMax =  Math.log((dayLogOffset+Number(surfaceState["daysIndex"][surfaceState["daysIndex"].length-1])))*100 * (callsputs01 == 0 ? 1 : -1)+25;
+      var geometry = new THREE.Geometry();
+      geometry.vertices.push(new THREE.Vector3( 0,surfaceState["strikesIndex"][i]*yscale ,-1));
+      geometry.vertices.push(new THREE.Vector3( xMax, surfaceState["strikesIndex"][i]*yscale ,-1  ));
+      var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({}));
+      line.translateX(xOffset* (callsputs01 == 0 ? 1 : -1))
+
+      scene.add( line );
+
+      // Only add intermittant text
+      if (surfaceState["strikesIndex"][i]*yscale- lastY < 25) {
+        continue;
+      }
+
+        lastY=surfaceState["strikesIndex"][i]*yscale
+      let text= makeTextSprite(surfaceState["strikesIndex"][i]);
+      text.position.x=xMax+50* (callsputs01 == 0 ? 1 : -1)
+      text.position.y=surfaceState["strikesIndex"][i]*yscale
+      text.translateX(xOffset* (callsputs01 == 0 ? 1 : -1)+30)
+
+      scene.add( line );
+      scene.add( text );
+    }
 }
 
 
@@ -254,7 +274,7 @@ function makeTextSprite( message, parameters )
 		parameters["fontface"] : "Consolas";
 
 	var fontsize = parameters.hasOwnProperty("fontsize") ?
-		parameters["fontsize"] : 42;
+		parameters["fontsize"] : 36;
 
 	var borderThickness = parameters.hasOwnProperty("borderThickness") ?
 		parameters["borderThickness"] : 4;
@@ -275,7 +295,7 @@ function makeTextSprite( message, parameters )
 	var metrics = context.measureText( message );
 	var textWidth = metrics.width;
 
-	
+
 	// 1.4 is extra height factor for text below baseline: g,j,p,q.
 
 

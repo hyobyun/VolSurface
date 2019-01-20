@@ -12,6 +12,20 @@ body {
 	position: absolute;
 	top: 10px;
   font-size:.75em;
+	width: 50%;
+	text-align: left;
+	z-index: 1;
+	display:block;
+  margin:0;
+  padding:10px;
+  color: #FFFFFF;
+  font-family: Consolas,monaco,monospace;
+
+}
+#hyobyun {
+	position: absolute;
+	bottom: 10px;
+  font-size:.75em;
 	width: 100%;
 	text-align: left;
 	z-index: 1;
@@ -22,6 +36,21 @@ body {
   font-family: Consolas,monaco,monospace;
 
 }
+a:link {
+  color: #2288ff;
+}
+
+a:visited {
+  color: #2288ff;
+
+a:hover {
+  color:  #44aaff;
+}
+
+a:active {
+  color: #2288ff;
+}
+
 #info h1 {
 
   font-size:1.2em;
