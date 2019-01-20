@@ -44,16 +44,18 @@ function processRawItem(item) {
     var calliv = item["data"][0][headeri["Call IV"]];
     var putiv = item["data"][0][headeri["Put IV"]];
 
-    if (!(days in surfaceState["rawData"])) {
-        surfaceState["rawData"][days] = {};
+    if (!Number.isNaN(strike) ){
+      if (!(days in surfaceState["rawData"])) {
+          surfaceState["rawData"][days] = {};
+      }
+      if (!(strike in surfaceState["rawData"][days])) {
+          surfaceState["rawData"][days][strike] = {};
+      }
+      if (!(strike in surfaceState["allStrikes"])) {
+          surfaceState["allStrikes"][strike] = 1;
+      }
+      surfaceState["rawData"][days][strike] = [calliv, putiv];
     }
-    if (!(strike in surfaceState["rawData"][days])) {
-        surfaceState["rawData"][days][strike] = {};
-    }
-    if (!(strike in surfaceState["allStrikes"])) {
-        surfaceState["allStrikes"][strike] = 1;
-    }
-    surfaceState["rawData"][days][strike] = [calliv, putiv];
 }
 
 
@@ -70,6 +72,8 @@ function processRawDataComplete() {
             surfaceState["procData"][i][j] = surfaceState["rawData"][surfaceState["daysIndex"][i]][surfaceState["strikesIndex"][j]];
         }
     }
+    console.log(surfaceState["allStrikes"])
+    console.log(surfaceState["strikesIndex"] )
     console.log(surfaceState["procData"])
     interpolate();
     drawCallsPuts();
@@ -77,6 +81,8 @@ function processRawDataComplete() {
 
 // shitty empty fill w/ neighbor - my version of "middle out"
 function interpolate() {
+
+
     for (var i = 0; i < surfaceState["daysIndex"].length; i++) {
         let errStepDiff= .5;
 
@@ -138,6 +144,12 @@ function getTriangles(size, i, j) {
 }
 
 function draw(callsputs01) {
+
+      let dayLogOffset=1;
+      if(surfaceState["daysIndex"][0]<0) {
+        dayLogOffset=dayLogOffset+surfaceState["daysIndex"][0]*-1;
+      }
+  let xOffset=100;
     let surfaceGeo = new THREE.Geometry();
     let surfaceGeoVertexVolLookup = [];
 
@@ -157,10 +169,9 @@ function draw(callsputs01) {
             ]);
             var color = gradient.reverse().hsvAt(Math.min(vol / 100, 1)).toHexString()
 
-
             var dateoffset=100;
             surfaceGeo.vertices.push(
-                new THREE.Vector3( surfaceState["daysIndex"][i]* (callsputs01 == 0 ? 1 : -1), surfaceState["strikesIndex"][j] , vol * 1)
+                new THREE.Vector3( Math.log((dayLogOffset+Number(surfaceState["daysIndex"][i])))*100 * (callsputs01 == 0 ? 1 : -1), surfaceState["strikesIndex"][j] , vol * 1)
             );
             surfaceGeoVertexVolLookup.push(vol);
             if (i < surfaceState["daysIndex"].length - 1 && j < surfaceState["strikesIndex"].length - 1) {
@@ -194,11 +205,119 @@ function draw(callsputs01) {
     geoMat.vertexColors = THREE.FaceColors;
     var surface = new THREE.Mesh(surfaceGeo, geoMat);
 
-    surface.translateX(100* (callsputs01 == 0 ? 1 : -1))
+    surface.translateX(xOffset* (callsputs01 == 0 ? 1 : -1))
     scene.add(surface);
 
 
+
+    // GRIDS
+
+    // time grid
+    var size = surfaceState["daysIndex"][surfaceState["daysIndex"].length-1]* (callsputs01 == 0 ? 1 : -1)*10;
+    var divisions = 100;
+
+    var gridHelper = new THREE.GridHelper( size, divisions );
+    gridHelper.rotateX(THREE.Math.degToRad(90))
+    scene.add( gridHelper );
+
+
+
+    // Time gridHelper
+    for (var i = 0; i < surfaceState["daysIndex"].length; i++) {
+      let x =  Math.log((dayLogOffset+Number(surfaceState["daysIndex"][i])))*100 * (callsputs01 == 0 ? 1 : -1);
+      var geometry = new THREE.Geometry();
+      console.log(surfaceState["daysIndex"][i] + " --- " +dayLogOffset)
+      geometry.vertices.push(new THREE.Vector3( x,-5,0));
+      geometry.vertices.push(new THREE.Vector3( x, (5+ Number(surfaceState["strikesIndex"][surfaceState["strikesIndex"].length-1])),0   ));
+
+      var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({}));
+      line.translateX(xOffset* (callsputs01 == 0 ? 1 : -1))
+
+      let text= makeTextSprite(surfaceState["daysIndex"][i]);
+      text.position.x=x
+      text.position.y=-25
+      text.translateX(xOffset* (callsputs01 == 0 ? 1 : -1)+30)
+
+      scene.add( line );
+      scene.add( text );
+    }
+
 }
+
+
+function makeTextSprite( message, parameters )
+{
+  console.log(message);
+	if ( parameters === undefined ) parameters = {};
+
+	var fontface = parameters.hasOwnProperty("fontface") ?
+		parameters["fontface"] : "Consolas";
+
+	var fontsize = parameters.hasOwnProperty("fontsize") ?
+		parameters["fontsize"] : 42;
+
+	var borderThickness = parameters.hasOwnProperty("borderThickness") ?
+		parameters["borderThickness"] : 4;
+
+	var borderColor = parameters.hasOwnProperty("borderColor") ?
+		parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+
+	var backgroundColor = parameters.hasOwnProperty("backgroundColor") ?
+		parameters["backgroundColor"] : { r:0, g:0, b:0, a:1.0 };
+
+	//var spriteAlignment = parameters.hasOwnProperty("alignment") ?
+
+	var canvas = document.createElement('canvas');
+	var context = canvas.getContext('2d');
+	context.font = fontsize + "px " + fontface;
+
+	// get size data (height depends only on font size)
+	var metrics = context.measureText( message );
+	var textWidth = metrics.width;
+
+	
+	// 1.4 is extra height factor for text below baseline: g,j,p,q.
+
+
+	// 1.4 is extra height factor for text below baseline: g,j,p,q.
+
+	// text color
+	context.fillStyle = "rgba(255, 255, 255, 1.0)";
+
+	context.fillText( message, borderThickness, fontsize + borderThickness);
+
+	// canvas contents will be used for a texture
+	var texture = new THREE.Texture(canvas)
+	texture.needsUpdate = true;
+
+	var spriteMaterial = new THREE.SpriteMaterial(
+		{ map: texture} );
+	var sprite = new THREE.Sprite( spriteMaterial );
+	sprite.scale.set(100,50,1.0);
+	return sprite;
+}
+
+
+// function for drawing rounded rectangles
+function roundRect(ctx, x, y, w, h, r)
+{
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y);
+    ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r);
+    ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h);
+    ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r);
+    ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+    ctx.fill();
+	ctx.stroke();
+}
+
+
+
 // handle files imported from Ui
 function fileImport(files) {
     console.log(files);
