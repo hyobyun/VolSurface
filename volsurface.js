@@ -17,6 +17,8 @@ var surfaceState = {
     "procData": [],
     "callsFn": [],
     "putsFn": [],
+    "surfaces":[],
+    "clickSphere" : {}
 };
 var headeri = {
     "Expiration Date": 0,
@@ -72,9 +74,6 @@ function processRawDataComplete() {
             surfaceState["procData"][i][j] = surfaceState["rawData"][surfaceState["daysIndex"][i]][surfaceState["strikesIndex"][j]];
         }
     }
-    console.log(surfaceState["allStrikes"])
-    console.log(surfaceState["strikesIndex"] )
-    console.log(surfaceState["procData"])
     interpolate();
     drawCallsPuts();
 }
@@ -207,8 +206,27 @@ function draw(callsputs01) {
     var surface = new THREE.Mesh(surfaceGeo, geoMat);
 
     surface.translateX(xOffset* (callsputs01 == 0 ? 1 : -1))
-    scene.add(surface);
+    surfaceState["surfaces"].push(surface)
 
+    //Click intercept
+    surface.callback = function(point) {
+
+
+      surfaceState["clickSphere"].position.set(point["x"], point["y"],point["z"]);
+
+      // Reverse draw function
+      point["x"]=point["x"]-xOffset* (callsputs01 == 0 ? 1 : -1)
+      point["x"]= Math.exp( (point["x"]*(point["x"]< 0 ? -1 : 1))/100)-dayLogOffset
+
+      point["y"] = point["y"]/yscale;
+
+      var now = new Date();
+      var expire = new Date();
+      expire.setDate(now.getDate()+point["x"]);
+      document.getElementById("raytrace").innerHTML = expire.toLocaleDateString("en-US")+ "<br> " + "<strong>Strike:</strong> " +point["y"].toFixed(2) + "<br> <strong>IV: </strong>"  + point["z"].toFixed(2);
+
+     }
+    scene.add(surface);
 
 
     // GRIDS
@@ -219,9 +237,8 @@ function draw(callsputs01) {
     for (var i = 0; i < surfaceState["daysIndex"].length; i++) {
       let x =  Math.log((dayLogOffset+Number(surfaceState["daysIndex"][i])))*100 * (callsputs01 == 0 ? 1 : -1);
       var geometry = new THREE.Geometry();
-      console.log(surfaceState["daysIndex"][i] + " --- " +dayLogOffset)
-      geometry.vertices.push(new THREE.Vector3( x,-5,-1));
-      geometry.vertices.push(new THREE.Vector3( x, (5+ yscale*Number(surfaceState["strikesIndex"][surfaceState["strikesIndex"].length-1])),-1));
+      geometry.vertices.push(new THREE.Vector3( x,0,-1));
+      geometry.vertices.push(new THREE.Vector3( x, (25+ yscale*Number(surfaceState["strikesIndex"][surfaceState["strikesIndex"].length-1])),-1));
 
       var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({}));
       line.translateX(xOffset* (callsputs01 == 0 ? 1 : -1))
@@ -239,9 +256,9 @@ function draw(callsputs01) {
     // Strike gridHelper
     let lastY=0;
     for (var i = 0; i < surfaceState["strikesIndex"].length; i++) {
-      let xMax =  Math.log((dayLogOffset+Number(surfaceState["daysIndex"][surfaceState["daysIndex"].length-1])))*100 * (callsputs01 == 0 ? 1 : -1)+25;
+      let xMax =  Math.log((dayLogOffset+Number(surfaceState["daysIndex"][surfaceState["daysIndex"].length-1])))*100 * (callsputs01 == 0 ? 1 : -1)+25* (callsputs01 == 0 ? 1 : -1);
       var geometry = new THREE.Geometry();
-      geometry.vertices.push(new THREE.Vector3( 0,surfaceState["strikesIndex"][i]*yscale ,-1));
+      geometry.vertices.push(new THREE.Vector3( -25*(callsputs01 == 0 ? 1 : -1),surfaceState["strikesIndex"][i]*yscale ,-1));
       geometry.vertices.push(new THREE.Vector3( xMax, surfaceState["strikesIndex"][i]*yscale ,-1  ));
       var line = new THREE.Line(geometry, new THREE.LineBasicMaterial({}));
       line.translateX(xOffset* (callsputs01 == 0 ? 1 : -1))
@@ -267,7 +284,6 @@ function draw(callsputs01) {
 
 function makeTextSprite( message, parameters )
 {
-  console.log(message);
 	if ( parameters === undefined ) parameters = {};
 
 	var fontface = parameters.hasOwnProperty("fontface") ?
@@ -340,7 +356,6 @@ function roundRect(ctx, x, y, w, h, r)
 
 // handle files imported from Ui
 function fileImport(files) {
-    console.log(files);
     if (window.FileReader) {
         var reader = new FileReader();
         reader.readAsText(files[0]);
@@ -413,6 +428,12 @@ function init() {
     var directionalLight = new THREE.DirectionalLight( 0xCCCCCCC,0.5);
     scene.add( directionalLight );
 
+    // Draw a little spher
+    var sgeometry = new THREE.SphereGeometry( 5,16,16);
+    var smaterial = new THREE.MeshBasicMaterial( {color: 0xFFFFFF} );
+    surfaceState["clickSphere"] = new THREE.Mesh( sgeometry, smaterial );
+    scene.add( surfaceState["clickSphere"] );
+
 
     geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
     material = new THREE.MeshNormalMaterial();
@@ -445,6 +466,27 @@ function animate() {
 function render() {
     renderer.render(scene, camera);
 }
+var raycaster = new THREE.Raycaster();
+var mouse = new THREE.Vector2();
+
+function clickTrace( event ) {
+
+    event.preventDefault();
+
+    mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+    mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+    raycaster.setFromCamera( mouse, camera );
+
+    var intersects = raycaster.intersectObjects( surfaceState["surfaces"] );
+    if ( intersects.length > 0 ) {
+
+        intersects[0].object.callback(intersects[0]["point"]);
+    }
+
+}
+
+document.addEventListener('mousemove', clickTrace, false);
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;

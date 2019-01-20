@@ -36,6 +36,20 @@ body {
   font-family: Consolas,monaco,monospace;
 
 }
+#raytrace {
+	position: absolute;
+	top: 250px;
+  font-size:.75em;
+	width: 100%;
+	text-align: left;
+	z-index: 1;
+	display:block;
+  margin:0;
+  padding:10px;
+  color: #FFFFFF;
+  font-family: Consolas,monaco,monospace;
+
+}
 a:link {
   color: #2288ff;
 }
