@@ -223,7 +223,7 @@ function draw(callsputs01) {
       var now = new Date();
       var expire = new Date();
       expire.setDate(now.getDate()+point["x"]);
-      document.getElementById("raytrace").innerHTML = expire.toLocaleDateString("en-US")+ "<br> " + "<strong>Strike:</strong> " +point["y"].toFixed(2) + "<br> <strong>IV: </strong>"  + point["z"].toFixed(2);
+      document.getElementById("raytrace").innerHTML ="<strong>Clicked Location</strong> <br> "+ (callsputs01==0 ? "Call" : "Put") + "<br>"+ expire.toLocaleDateString("en-US")+ "<br> " + "<strong>Strike:</strong> " +point["y"].toFixed(2) + "<br> <strong>IV: </strong>"  + point["z"].toFixed(2);
 
      }
     scene.add(surface);
@@ -272,7 +272,7 @@ function draw(callsputs01) {
 
         lastY=surfaceState["strikesIndex"][i]*yscale
       let text= makeTextSprite(surfaceState["strikesIndex"][i]);
-      text.position.x=xMax+50* (callsputs01 == 0 ? 1 : -1)
+      text.position.x=xMax+25* (callsputs01 == 0 ? 1 : -1)
       text.position.y=surfaceState["strikesIndex"][i]*yscale
       text.translateX(xOffset* (callsputs01 == 0 ? 1 : -1)+30)
 
@@ -287,7 +287,7 @@ function makeTextSprite( message, parameters )
 	if ( parameters === undefined ) parameters = {};
 
 	var fontface = parameters.hasOwnProperty("fontface") ?
-		parameters["fontface"] : "Consolas";
+		parameters["fontface"] : "Consolas,monaco,monospace";
 
 	var fontsize = parameters.hasOwnProperty("fontsize") ?
 		parameters["fontsize"] : 36;
@@ -310,12 +310,6 @@ function makeTextSprite( message, parameters )
 	// get size data (height depends only on font size)
 	var metrics = context.measureText( message );
 	var textWidth = metrics.width;
-
-
-	// 1.4 is extra height factor for text below baseline: g,j,p,q.
-
-
-	// 1.4 is extra height factor for text below baseline: g,j,p,q.
 
 	// text color
 	context.fillStyle = "rgba(255, 255, 255, 1.0)";
