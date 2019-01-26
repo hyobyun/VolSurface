@@ -24,7 +24,7 @@ var headeri = {
     "Expiration Date": 0,
     "Strike": 11,
     "Call IV": 7,
-    "Put IV": 8
+    "Put IV": 18
 
 }
 init();
@@ -45,7 +45,7 @@ function processRawItem(item) {
     var strike = Number(item["data"][0][headeri["Strike"]]); //
     var calliv = item["data"][0][headeri["Call IV"]];
     var putiv = item["data"][0][headeri["Put IV"]];
-
+    console.log(item["data"][0]);
     if (!Number.isNaN(strike) ){
       if (!(days in surfaceState["rawData"])) {
           surfaceState["rawData"][days] = {};
